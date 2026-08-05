@@ -25,7 +25,9 @@ jobs:
 
       - name: Install Frontend Dependencies
         working-directory: web
-        run: npm install
+        run: |
+          rm -f package-lock.json
+          npm install
 
       - name: Build Frontend
         working-directory: web
