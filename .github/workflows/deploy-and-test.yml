@@ -45,6 +45,19 @@ jobs:
         working-directory: mandibularE2E
         run: npm ci || npm install
 
+      - name: Run Web Frontend Security Suite
+        working-directory: mandibularE2E
+        run: |
+          export NODE_PATH=$(pwd)/node_modules
+          node scripts/generateWebSecuritySuite.js > scan_output.txt
+          cat scan_output.txt
+          CRITICAL=$(grep "CRITICAL_COUNT=" scan_output.txt | cut -d'=' -f2)
+          if [ "$CRITICAL" -gt 0 ]; then
+            echo "Security Gate Failed: Found $CRITICAL critical/high vulnerabilities."
+            exit 1
+          fi
+          cat Security_Reports/web-executive-summary.md >> $GITHUB_STEP_SUMMARY
+
       - name: Run Mega Web E2E Test Suite
         working-directory: mandibularE2E
         run: npx mocha tests/mega_web_1100.test.js --reporter ./utils/excelReporter.js

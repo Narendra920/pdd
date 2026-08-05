@@ -1,0 +1,44 @@
+name: Backend Security Review
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  backend-security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.9
+
+      - name: Install Dependencies
+        run: |
+          cd mandibularE2E
+          npm ci || npm install
+
+      - name: Run Backend Flask Security Suite
+        working-directory: mandibularBackend
+        run: |
+          export NODE_PATH=$GITHUB_WORKSPACE/mandibularE2E/node_modules
+          node scripts/generateSecuritySuite.js > scan_output.txt
+          cat scan_output.txt
+          
+          CRITICAL=$(grep "CRITICAL_COUNT=" scan_output.txt | cut -d'=' -f2)
+          if [ "$CRITICAL" -gt 0 ]; then
+            echo "Security Gate Failed: Found $CRITICAL critical/high vulnerabilities."
+            exit 1
+          fi
+          
+          cat Security_Reports/executive-summary.md >> $GITHUB_STEP_SUMMARY
