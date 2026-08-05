@@ -21,11 +21,11 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 22.x
 
       - name: Install Frontend Dependencies
         working-directory: web
-        run: npm ci
+        run: npm install
 
       - name: Build Frontend
         working-directory: web
