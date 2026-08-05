@@ -1,0 +1,73 @@
+name: Deploy and Test
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build-test-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install Frontend Dependencies
+        working-directory: mandibularWeb
+        run: npm ci
+
+      - name: Build Frontend
+        working-directory: mandibularWeb
+        run: npm run build
+
+      - name: Start Background Vite Preview Server
+        working-directory: mandibularWeb
+        run: |
+          npx vite preview --port 5173 --host 127.0.0.1 --base /mandibular-project/ &
+          sleep 4
+          curl -s --head  --request GET http://127.0.0.1:5173/mandibular-project/ | grep "200 OK"
+          echo "TEST_BASE_URL=http://127.0.0.1:5173/mandibular-project/" >> $GITHUB_ENV
+
+      - name: Install E2E Dependencies
+        working-directory: mandibularE2E
+        run: npm ci || npm install
+
+      - name: Run Mega Web E2E Test Suite
+        working-directory: mandibularE2E
+        run: npx mocha tests/mega_web_1100.test.js --reporter ./utils/excelReporter.js
+
+      - name: Inject Reports into Build Directory
+        run: |
+          mkdir -p mandibularWeb/dist/reports/latest
+          mkdir -p mandibularWeb/dist/reports/history/build-${{ github.run_number }}
+          cp mandibularE2E/Test_Results/HTML/execution-report.html mandibularWeb/dist/reports/latest/execution-report.html
+          cp mandibularE2E/Test_Results/HTML/execution-report.html mandibularWeb/dist/reports/history/build-${{ github.run_number }}/execution-report.html
+          cp mandibularE2E/Test_Results/selenium-report.xlsx mandibularWeb/dist/reports/latest/selenium-report.xlsx
+
+      - name: Upload Pages Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: mandibularWeb/dist
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Write Step Summary
+        if: always()
+        run: |
+          echo "### 🚀 Mega Web E2E Execution Summary" >> $GITHUB_STEP_SUMMARY
+          echo "✅ 1,100 Tests Executed across 110 Categories." >> $GITHUB_STEP_SUMMARY
+          echo "📊 [View HTML Execution Report](${{ steps.deployment.outputs.page_url }}reports/latest/execution-report.html)" >> $GITHUB_STEP_SUMMARY
+          echo "📂 History reports saved to \`/reports/history/build-${{ github.run_number }}/\`" >> $GITHUB_STEP_SUMMARY

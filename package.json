@@ -1,0 +1,13 @@
+{
+  "name": "mandibular-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Mandibular Morphogenetic Analysis System — Monorepo",
+  "scripts": {
+    "app:start": "cd mobile && npx expo start",
+    "app:web": "cd mobile && npx expo start --web",
+    "app:android": "cd mobile && npx expo start --android",
+    "app:ios": "cd mobile && npx expo start --ios"
+  },
+  "note": "One frontend (mobile/) runs on Web, Android & iOS via Expo + react-native-web. Same Supabase backend for all platforms."
+}
