@@ -24,20 +24,20 @@ jobs:
           node-version: 18
 
       - name: Install Frontend Dependencies
-        working-directory: mandibularWeb
+        working-directory: web
         run: npm ci
 
       - name: Build Frontend
-        working-directory: mandibularWeb
+        working-directory: web
         run: npm run build
 
-      - name: Start Background Vite Preview Server
-        working-directory: mandibularWeb
+      - name: Start Background Preview Server
+        working-directory: web
         run: |
-          npx vite preview --port 5173 --host 127.0.0.1 --base /mandibular-project/ &
+          npx serve out -p 5173 &
           sleep 4
-          curl -s --head  --request GET http://127.0.0.1:5173/mandibular-project/ | grep "200 OK"
-          echo "TEST_BASE_URL=http://127.0.0.1:5173/mandibular-project/" >> $GITHUB_ENV
+          curl -s --head  --request GET http://127.0.0.1:5173/ | grep "200 OK"
+          echo "TEST_BASE_URL=http://127.0.0.1:5173/" >> $GITHUB_ENV
 
       - name: Install E2E Dependencies
         working-directory: mandibularE2E
@@ -49,16 +49,16 @@ jobs:
 
       - name: Inject Reports into Build Directory
         run: |
-          mkdir -p mandibularWeb/dist/reports/latest
-          mkdir -p mandibularWeb/dist/reports/history/build-${{ github.run_number }}
-          cp mandibularE2E/Test_Results/HTML/execution-report.html mandibularWeb/dist/reports/latest/execution-report.html
-          cp mandibularE2E/Test_Results/HTML/execution-report.html mandibularWeb/dist/reports/history/build-${{ github.run_number }}/execution-report.html
-          cp mandibularE2E/Test_Results/selenium-report.xlsx mandibularWeb/dist/reports/latest/selenium-report.xlsx
+          mkdir -p web/out/reports/latest
+          mkdir -p web/out/reports/history/build-${{ github.run_number }}
+          cp mandibularE2E/Test_Results/HTML/execution-report.html web/out/reports/latest/execution-report.html
+          cp mandibularE2E/Test_Results/HTML/execution-report.html web/out/reports/history/build-${{ github.run_number }}/execution-report.html
+          cp mandibularE2E/Test_Results/selenium-report.xlsx web/out/reports/latest/selenium-report.xlsx
 
       - name: Upload Pages Artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: mandibularWeb/dist
+          path: web/out
 
       - name: Deploy to GitHub Pages
         id: deployment
