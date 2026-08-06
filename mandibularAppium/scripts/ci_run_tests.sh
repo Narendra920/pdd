@@ -25,4 +25,14 @@ if [ -f "$GITHUB_PATH" ]; then
 fi
 
 echo "Running WDIO tests..."
-node node_modules/@wdio/cli/bin/wdio.js run wdio.conf.js || trigger_fallback
+set +e
+node node_modules/@wdio/cli/bin/wdio.js run wdio.conf.js
+WDIO_EXIT_CODE=$?
+
+if [ ! -f "reports/appium-report.xlsx" ]; then
+    echo "WDIO crashed fatally before generating reports! Running fallback..."
+    node utils/generateFallbackReport.js
+    exit 1
+fi
+
+exit $WDIO_EXIT_CODE
