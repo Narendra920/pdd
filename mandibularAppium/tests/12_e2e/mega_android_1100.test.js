@@ -1,4 +1,5 @@
 const fs = require('fs');
+const assert = require('assert');
 
 describe('Mega Android Appium E2E Suite', () => {
     const categories = [
@@ -18,7 +19,7 @@ describe('Mega Android Appium E2E Suite', () => {
                         // First test: Establish real Appium connection check
                         if (typeof driver !== 'undefined') {
                             const context = await driver.getContext();
-                            expect(context).toBeDefined();
+                            assert.ok(context, 'Driver context should be defined');
                         }
                     }
                     
@@ -27,7 +28,7 @@ describe('Mega Android Appium E2E Suite', () => {
                     await new Promise(r => setTimeout(r, sleepTime));
                     
                     // Fast parameterized assertion
-                    expect(i).toBeGreaterThan(0);
+                    assert.ok(i > 0, 'Counter should be greater than 0');
                     
                     const duration = Date.now() - start;
                     if (typeof browser !== 'undefined' && browser.sharedStore) {

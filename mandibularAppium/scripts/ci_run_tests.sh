@@ -10,6 +10,9 @@ trigger_fallback() {
 echo "Installing APK to emulator..."
 adb install -r "${APK_PATH}" || trigger_fallback
 
+echo "Installing Appium UiAutomator2 Driver..."
+npx appium driver install uiautomator2
+
 echo "Starting Appium server in background..."
 npx appium --log-level warn > /tmp/appium.log 2>&1 &
 
