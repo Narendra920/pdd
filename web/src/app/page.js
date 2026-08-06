@@ -46,6 +46,7 @@ export default function Page() {
     confirmPassword: ''
   });
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [profileForm, setProfileForm] = useState({ ...user });
   
   // App Interaction State
@@ -998,11 +999,14 @@ export default function Page() {
                       return;
                     }
 
+                    setIsLoggingIn(true);
+                    
                     if (isSupabaseConfigured && supabase) {
                       const { data, error } = await supabase.auth.signInWithPassword({
                         email: authForm.email,
                         password: authForm.password
                       });
+                      setIsLoggingIn(false);
                       if (error) {
                         // Handle unconfirmed email: auto-resend confirmation or show guidance
                         if (error.message.toLowerCase().includes('email not confirmed') || error.message.toLowerCase().includes('not confirmed')) {
@@ -1020,23 +1024,27 @@ export default function Page() {
                       return;
                     }
 
-                    const matchedAccount = accounts.find(
-                      acc => acc.email.toLowerCase() === authForm.email.toLowerCase() && acc.password === authForm.password
-                    );
-                    if (matchedAccount) {
-                      setUser({
-                        ...user,
-                        email: matchedAccount.email,
-                        name: matchedAccount.name,
-                        clinic: matchedAccount.clinic || 'Metro Dental Clinic',
-                        department: matchedAccount.department || 'Orthodontics Department'
-                      });
-                      showToast('Successfully signed in!', 'success');
-                      setNavigationHistory(['dashboard']);
-                      setScreen('dashboard');
-                    } else {
-                      showToast('Invalid email or password', 'warning');
-                    }
+                    // Simulate network delay for mock login to match spinner
+                    setTimeout(() => {
+                      setIsLoggingIn(false);
+                      const matchedAccount = accounts.find(
+                        acc => acc.email.toLowerCase() === authForm.email.toLowerCase() && acc.password === authForm.password
+                      );
+                      if (matchedAccount) {
+                        setUser({
+                          ...user,
+                          email: matchedAccount.email,
+                          name: matchedAccount.name,
+                          clinic: matchedAccount.clinic || 'Metro Dental Clinic',
+                          department: matchedAccount.department || 'Orthodontics Department'
+                        });
+                        showToast('Successfully signed in!', 'success');
+                        setNavigationHistory(['dashboard']);
+                        setScreen('dashboard');
+                      } else {
+                        showToast('Invalid email or password', 'warning');
+                      }
+                    }, 800);
                   }} className="space-y-4">
                     <div className="space-y-1">
                       <label className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Email Address</label>
@@ -1044,6 +1052,7 @@ export default function Page() {
                         <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
                         <input 
                           type="email" 
+                          autoComplete="email"
                           placeholder="doctor@institution.edu"
                           value={authForm.email || ''}
                           onChange={(e) => setAuthForm({ ...authForm, email: e.target.value })}
@@ -1064,22 +1073,24 @@ export default function Page() {
                           Forgot Password?
                         </button>
                       </div>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                      <div className="relative flex items-center">
+                        <Lock className="absolute left-3 h-4 w-4 text-slate-400" />
                         <input 
                           type={showPassword ? "text" : "password"} 
+                          autoComplete="current-password"
                           placeholder="••••••••"
                           value={authForm.password || ''}
                           onChange={(e) => setAuthForm({ ...authForm, password: e.target.value })}
                           required
-                          className={`w-full pl-10 pr-10 py-2.5 bg-white dark:bg-slate-800 border ${authForm.password && /\s/.test(authForm.password) ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-slate-200 dark:border-slate-700 focus:ring-blue-500'} rounded-xl text-sm focus:outline-none focus:ring-2 dark:text-white`}
+                          className={`w-full pl-10 pr-12 py-2.5 bg-white dark:bg-slate-800 border ${authForm.password && /\s/.test(authForm.password) ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-slate-200 dark:border-slate-700 focus:ring-blue-500'} rounded-xl text-sm focus:outline-none focus:ring-2 dark:text-white`}
                         />
                         <button 
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-3.5 text-slate-400 hover:text-slate-600"
+                          className="absolute right-2 p-2 text-slate-400 hover:text-slate-600 active:bg-slate-100 rounded-full transition"
+                          aria-label={showPassword ? "Hide password" : "Show password"}
                         >
-                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                         </button>
                       </div>
                       {authForm.password && /\s/.test(authForm.password) && (
@@ -1106,9 +1117,20 @@ export default function Page() {
 
                     <button 
                       type="submit"
-                      className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg hover:shadow-blue-500/20 transition active:scale-[0.98] text-sm"
+                      disabled={isLoggingIn}
+                      className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-bold rounded-xl shadow-lg hover:shadow-blue-500/20 transition active:scale-[0.98] text-sm flex items-center justify-center space-x-2"
                     >
-                      Sign In
+                      {isLoggingIn ? (
+                        <>
+                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          <span>Signing In...</span>
+                        </>
+                      ) : (
+                        <span>Sign In</span>
+                      )}
                     </button>
                   </form>
 
