@@ -65,7 +65,7 @@ jobs:
       - name: Publish Step Summary
         if: always()
         run: |
-          cat mandibularAppium/reports/step-summary.md >> $GITHUB_STEP_SUMMARY
+          cat mandibularAppium/reports/step-summary.md >> $GITHUB_STEP_SUMMARY || true
 
       - name: Ensure Reports Directory Exists
         if: always()
