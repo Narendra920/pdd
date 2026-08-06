@@ -67,6 +67,10 @@ jobs:
         run: |
           cat mandibularAppium/reports/step-summary.md >> $GITHUB_STEP_SUMMARY
 
+      - name: Ensure Reports Directory Exists
+        if: always()
+        run: mkdir -p mandibularAppium/reports
+
       - name: Upload Test Artifacts
         if: always()
         uses: actions/upload-artifact@v4

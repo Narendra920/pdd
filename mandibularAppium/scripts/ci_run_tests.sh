@@ -1,14 +1,20 @@
 #!/bin/bash
-set -e
+
+# Define fallback function
+trigger_fallback() {
+    echo "Failure detected! Running fallback report generator..."
+    node utils/generateFallbackReport.js
+    exit 1
+}
 
 echo "Installing APK to emulator..."
-adb install -r "${APK_PATH}"
+adb install -r "${APK_PATH}" || trigger_fallback
 
 echo "Starting Appium server in background..."
 npx appium --log-level warn > /tmp/appium.log 2>&1 &
 
 echo "Waiting for Appium to start..."
-timeout 60 bash -c 'while ! curl -s http://127.0.0.1:4723/status >/dev/null; do sleep 2; done'
+timeout 60 bash -c 'while ! curl -s http://127.0.0.1:4723/status >/dev/null; do sleep 2; done' || trigger_fallback
 echo "Appium started."
 
 if [ -f "$GITHUB_PATH" ]; then
@@ -16,8 +22,4 @@ if [ -f "$GITHUB_PATH" ]; then
 fi
 
 echo "Running WDIO tests..."
-node node_modules/@wdio/cli/bin/wdio.js run wdio.conf.js || {
-    echo "WDIO failed. Running fallback report generator..."
-    node utils/generateFallbackReport.js
-    exit 1
-}
+node node_modules/@wdio/cli/bin/wdio.js run wdio.conf.js || trigger_fallback
