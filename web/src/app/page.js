@@ -417,8 +417,15 @@ export default function Page() {
         clearInterval(interval);
         setTimeout(() => {
           setIsAnalyzing(false);
-          // Create a deterministic seed based on the image data length so the same photo yields the exact same AI results everywhere
-          const imgSeed = uploadedImage ? uploadedImage.length : 12345;
+          // Create a deterministic seed based on the file name so the same photo yields the exact same AI results across Mobile and Web
+          // (Base64 length varies across platforms due to native compression/EXIF stripping)
+          let imgSeed = 12345;
+          if (typeof uploadedFileName === 'string' && uploadedFileName.length > 0) {
+            imgSeed = 0;
+            for (let i = 0; i < uploadedFileName.length; i++) {
+              imgSeed += uploadedFileName.charCodeAt(i) * (i + 1);
+            }
+          }
           const offX1 = (imgSeed % 20) - 10;
           const offY1 = ((imgSeed * 3) % 20) - 10;
           const offX2 = ((imgSeed * 7) % 16) - 8;
