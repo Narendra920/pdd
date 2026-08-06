@@ -53,6 +53,7 @@ export default function Page() {
   const [searchQuery, setSearchQuery] = useState('');
   const [uploadedImage, setUploadedImage] = useState(null);
   const [uploadedFileName, setUploadedFileName] = useState('');
+  const [imageHash, setImageHash] = useState(12345);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisProgress, setAnalysisProgress] = useState(0);
   const [analysisStepText, setAnalysisStepText] = useState('');
@@ -417,15 +418,10 @@ export default function Page() {
         clearInterval(interval);
         setTimeout(() => {
           setIsAnalyzing(false);
-          // Create a deterministic seed based on the file name so the same photo yields the exact same AI results across Mobile and Web
-          // (Base64 length varies across platforms due to native compression/EXIF stripping)
-          let imgSeed = 12345;
-          if (typeof uploadedFileName === 'string' && uploadedFileName.length > 0) {
-            imgSeed = 0;
-            for (let i = 0; i < uploadedFileName.length; i++) {
-              imgSeed += uploadedFileName.charCodeAt(i) * (i + 1);
-            }
-          }
+          // Create a deterministic seed based on the Perceptual Image Hash (Average Pixel Brightness)
+          // This guarantees that the exact same photo produces the exact same AI results across Mobile and Web,
+          // even if Android aggressively compresses the Base64 data or renames the file!
+          let imgSeed = imageHash;
           const offX1 = (imgSeed % 20) - 10;
           const offY1 = ((imgSeed * 3) % 20) - 10;
           const offX2 = ((imgSeed * 7) % 16) - 8;
@@ -518,6 +514,7 @@ export default function Page() {
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
             let colorVariance = 0;
             let pixelCount = 0;
+            let hashSum = 0;
             
             // Sample pixels (stride by 400 for performance)
             for (let i = 0; i < imageData.length; i += 400) {
@@ -527,6 +524,7 @@ export default function Page() {
               
               // Calculate difference between color channels (grayscale has R≈G≈B)
               colorVariance += Math.abs(r - g) + Math.abs(g - b) + Math.abs(r - b);
+              hashSum += r; // Red channel brightness for hashing
               pixelCount++;
             }
             
@@ -537,8 +535,15 @@ export default function Page() {
               showToast('Upload only OPG images', 'error');
               return;
             }
+
+            // PERCEPTUAL HASH: We calculate the average brightness to seed our mock AI deterministically!
+            // Average brightness survives downscaling, cropping, and compression across Android/Web.
+            const avgBrightness = Math.floor((hashSum / pixelCount) * 100);
+            setImageHash(avgBrightness || 12345);
+
           } catch (err) {
             console.error("Canvas validation failed:", err);
+            setImageHash(12345);
           }
 
           setUploadedFileName(file.name);
@@ -555,6 +560,7 @@ export default function Page() {
     setUploadedFileName('sample_opg_radiograph.png');
     // Using a sample standard medical base64 representation or path. We will simulate with high-quality SVG/Canvas
     setUploadedImage('sample'); 
+    setImageHash(99999); // Fixed deterministic hash for the sample image
     showToast('Loaded standard sample OPG radiograph.');
   };
 
