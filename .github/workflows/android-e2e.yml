@@ -6,6 +6,10 @@ on:
       - main
   workflow_dispatch:
 
+permissions:
+  contents: write
+  pages: write
+  id-token: write
 jobs:
   android-e2e:
     runs-on: ubuntu-latest
