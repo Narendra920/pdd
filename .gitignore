@@ -2,9 +2,10 @@ node_modules/
 .next/
 out/
 build/
-android/
-ios/
-dist/
+android/app/build/
+android/app/.cxx/
+android/.gradle/
+ios/App/App/build/
 Test_Results/
 .env
 .env.local
