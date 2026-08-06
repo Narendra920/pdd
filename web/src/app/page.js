@@ -481,10 +481,46 @@ export default function Page() {
         const img = new Image();
         img.onload = () => {
           // OPG images are panoramic (width > height). Check aspect ratio.
-          if (img.width / img.height < 1.4) {
-            showToast('upload only opg image', 'warning');
+          if (img.width / img.height < 1.3) {
+            showToast('Upload only OPG images', 'warning');
             return;
           }
+
+          // Strict validation: OPGs are X-Rays, so they must be predominantly grayscale.
+          // We analyze the image pixels using a canvas.
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+          
+          try {
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+            let colorVariance = 0;
+            let pixelCount = 0;
+            
+            // Sample pixels (stride by 400 for performance)
+            for (let i = 0; i < imageData.length; i += 400) {
+              const r = imageData[i];
+              const g = imageData[i + 1];
+              const b = imageData[i + 2];
+              
+              // Calculate difference between color channels (grayscale has R≈G≈B)
+              colorVariance += Math.abs(r - g) + Math.abs(g - b) + Math.abs(r - b);
+              pixelCount++;
+            }
+            
+            const avgVariance = colorVariance / pixelCount;
+            
+            // If channels differ by more than 15 on average, it's a colored image, NOT an OPG
+            if (avgVariance > 15) {
+              showToast('Upload only OPG images', 'error');
+              return;
+            }
+          } catch (err) {
+            console.error("Canvas validation failed:", err);
+          }
+
           setUploadedFileName(file.name);
           setUploadedImage(reader.result);
           showToast('OPG Radiograph uploaded successfully!');
