@@ -417,10 +417,22 @@ export default function Page() {
         clearInterval(interval);
         setTimeout(() => {
           setIsAnalyzing(false);
-          // Set random but logical detected points for new analysis
-          setCo({ x: 135 + Math.floor(Math.random() * 20 - 10), y: 85 + Math.floor(Math.random() * 20 - 10) });
-          setGo({ x: 105 + Math.floor(Math.random() * 16 - 8), y: 245 + Math.floor(Math.random() * 20 - 10) });
-          setMe({ x: 255 + Math.floor(Math.random() * 20 - 10), y: 275 + Math.floor(Math.random() * 20 - 10) });
+          // Create a deterministic seed based on the image data length so the same photo yields the exact same AI results everywhere
+          const imgSeed = uploadedImage ? uploadedImage.length : 12345;
+          const offX1 = (imgSeed % 20) - 10;
+          const offY1 = ((imgSeed * 3) % 20) - 10;
+          const offX2 = ((imgSeed * 7) % 16) - 8;
+          const offY2 = ((imgSeed * 11) % 20) - 10;
+          const offX3 = ((imgSeed * 13) % 20) - 10;
+          const offY3 = ((imgSeed * 17) % 20) - 10;
+
+          const newCo = { x: 135 + offX1, y: 85 + offY1 };
+          const newGo = { x: 105 + offX2, y: 245 + offY2 };
+          const newMe = { x: 255 + offX3, y: 275 + offY3 };
+
+          setCo(newCo);
+          setGo(newGo);
+          setMe(newMe);
           
           // Add to recent scans list
           const newScanId = 'sc-' + Date.now();
@@ -433,9 +445,9 @@ export default function Page() {
             date: 'Today, Just Now',
             status: 'Processed',
             metrics: { angle: 123, height: 60.5, length: 108.4 },
-            co: { x: 130, y: 90 },
-            go: { x: 100, y: 250 },
-            me: { x: 260, y: 280 },
+            co: newCo,
+            go: newGo,
+            me: newMe,
             uploadedImage: uploadedImage === 'sample' ? null : uploadedImage
           };
 
