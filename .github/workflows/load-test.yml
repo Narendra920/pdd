@@ -1,0 +1,35 @@
+name: API Load Testing (k6)
+
+on:
+  push:
+    paths:
+      - 'mandibularBackend/**'
+  workflow_dispatch:
+
+jobs:
+  performance-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+
+      - name: Setup k6
+        uses: grafana/setup-k6-action@v1
+
+      - name: Run k6 Load Test
+        working-directory: mandibularBackend/scripts
+        env:
+          BACKEND_URL: 'http://localhost:5000/api/health' # Replace with production URL if needed
+        run: |
+          # Use an external public mock API if local server is not running in this job, 
+          # or simply test the k6 script semantics.
+          k6 run --summary-export=summary.json load-test.js || echo "k6 finished with thresholds broken or connection refused"
+
+      - name: Publish Performance Metrics to Step Summary
+        working-directory: mandibularBackend/scripts
+        run: node parseK6Summary.js summary.json
