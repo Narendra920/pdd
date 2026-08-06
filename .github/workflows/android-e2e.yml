@@ -1,0 +1,87 @@
+name: Mobile Appium E2E (Android)
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  android-e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+
+      - name: Install Appium & WDIO Dependencies
+        working-directory: mandibularAppium
+        run: npm ci || npm install
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Build Android Debug APK
+        working-directory: web/android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+          echo "APK_PATH=$PWD/app/build/outputs/apk/debug/app-debug.apk" >> $GITHUB_ENV
+
+      - name: Enable KVM for Android Emulator
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Run Android Emulator & Appium Tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 29
+          profile: Nexus 6
+          target: default
+          arch: x86_64
+          force-avd-creation: false
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          working-directory: mandibularAppium
+          script: bash scripts/ci_run_tests.sh
+
+      - name: Publish Step Summary
+        if: always()
+        run: |
+          cat mandibularAppium/reports/step-summary.md >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload Test Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Appium-Test-Reports
+          path: |
+            mandibularAppium/reports/appium-report.xlsx
+            mandibularAppium/reports/execution-report.html
+
+      - name: Deploy Reports to GitHub Pages
+        if: always()
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: mandibularAppium/reports
+          target-folder: android-reports/latest
+          branch: gh-pages
+          clean: false
+
+      - name: Deploy History to GitHub Pages
+        if: always()
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: mandibularAppium/reports
+          target-folder: android-reports/history/build-${{ github.run_number }}
+          branch: gh-pages
+          clean: false
