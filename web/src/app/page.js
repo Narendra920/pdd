@@ -78,62 +78,10 @@ export default function Page() {
   });
 
   // Recent Scans (Patient records)
-  const [recentScans, setRecentScans] = useState([
-    {
-      id: 'sc-001',
-      patientName: 'James Anderson',
-      age: 28,
-      gender: 'Male',
-      type: 'OPG Scan',
-      date: 'Today, 9:30 AM',
-      status: 'Processed', // Processed (Green), Pending (Orange), Completed (Blue)
-      metrics: { angle: 122, height: 61.2, length: 110.5 },
-      co: { x: 128, y: 95 },
-      go: { x: 98, y: 245 },
-      me: { x: 255, y: 275 }
-    },
-    {
-      id: 'sc-002',
-      patientName: 'Emily Chen',
-      age: 34,
-      gender: 'Female',
-      type: 'OPG Scan',
-      date: 'Yesterday, 4:15 PM',
-      status: 'Pending',
-      metrics: { angle: 0, height: 0, length: 0 },
-      co: null,
-      go: null,
-      me: null
-    },
-    {
-      id: 'sc-003',
-      patientName: 'Michael Davis',
-      age: 42,
-      gender: 'Male',
-      type: 'OPG Scan',
-      date: '2 Days Ago',
-      status: 'Completed',
-      metrics: { angle: 118, height: 63.8, length: 112.1 },
-      co: { x: 132, y: 88 },
-      go: { x: 102, y: 252 },
-      me: { x: 265, y: 285 }
-    },
-    {
-      id: 'sc-004',
-      patientName: 'Sophia Rodriguez',
-      age: 22,
-      gender: 'Female',
-      type: 'OPG Scan',
-      date: '4 Days Ago',
-      status: 'Completed',
-      metrics: { angle: 125, height: 58.4, length: 104.2 },
-      co: { x: 125, y: 102 },
-      go: { x: 105, y: 242 },
-      me: { x: 248, y: 278 }
-    }
-  ]);
+  const [recentScans, setRecentScans] = useState([]);
   
-  const [selectedScanId, setSelectedScanId] = useState('sc-001');
+  const [selectedScanId, setSelectedScanId] = useState(null);
+
 
   // Supabase Auth and Sync Effect
   useEffect(() => {
