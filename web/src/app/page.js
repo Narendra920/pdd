@@ -740,7 +740,7 @@ export default function Page() {
             ? 'w-full flex-1'
             : isAuthScreen
               ? 'w-full max-w-md bg-slate-50 dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden'
-              : 'w-full max-w-7xl mx-auto flex-1 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xl overflow-hidden min-h-[720px]'
+              : 'w-full max-w-md mx-auto flex-1 bg-slate-50 dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden min-h-[720px]'
         }`}>
           
           {/* Screen Content Container */}
