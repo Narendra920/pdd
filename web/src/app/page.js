@@ -445,7 +445,7 @@ export default function Page() {
             age: 26,
             gender: 'Female',
             type: 'OPG Scan',
-            date: 'Today, Just Now',
+            date: `Today, ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
             status: 'Processed',
             metrics: { angle: 123, height: 60.5, length: 108.4 },
             co: newCo,
